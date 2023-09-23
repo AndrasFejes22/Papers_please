@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class Inspector {
 
-    public String order;
+    public String order; // létrehozom ezt itt*
 
     public String getOrder() {
         return order;
@@ -42,11 +42,11 @@ public class Inspector {
     public final static String UNITED_FEDERATION = "United Federation";
 
     public void receiveBulletin(String bulletin) {// bulletin-->objektum?
-        this.order = bulletin;
+        this.order = bulletin; //* hogy a bulletint át tudjam itt adni**
     }
 
     public String inspect(Map<String, String> person) { // person-->objektum?
-        System.out.println("ORDER: " + getOrder());
+        System.out.println("ORDER: " + getOrder()); //** hogy itt meg ki tudjam venni. FISÍ
         String document = "";
         if(getOrder().contains("passport")){
             document = "passport";
