@@ -5,10 +5,15 @@ import java.util.Set;
 
 public class Inspector {
 
-    public String order; // létrehozom ezt itt*
+    public String bulletin;
+    Map<String, String> person;
 
-    public String getOrder() {
-        return order;
+    public String getBulletin() {
+        return bulletin;
+    }
+
+    public Map<String, String> getPerson() {
+        return person;
     }
 
     /**
@@ -41,24 +46,23 @@ public class Inspector {
     public final static String REPUBLIA = "Republia";
     public final static String UNITED_FEDERATION = "United Federation";
 
-    public void receiveBulletin(String bulletin) {// bulletin-->objektum?
-        this.order = bulletin; //* hogy a bulletint át tudjam itt adni**
+    public void receiveBulletin(String bulletin) {
+        this.bulletin= bulletin;
     }
 
-    public String inspect(Map<String, String> person) { // person-->objektum?
-        System.out.println("ORDER: " + getOrder()); //** hogy itt meg ki tudjam venni. FISÍ
+    public String inspect(Map<String, String> person) {
+        System.out.println("ORDER: " +getBulletin());
         String document = "";
-        if(getOrder().contains("passport")){
+        if(getBulletin().contains("passport")){
             document = "passport";
         }
-        if(getOrder().contains("access permit")){
+        if(getBulletin().contains("access permit")){
             document = "access permit";
         }
-        if(getOrder().contains("access permit")){
-            document = "work pass";
+        if(getBulletin().contains("access permit")){
+            document = "access permit";
         }
-        //grant_of_asylum
-        if(getOrder().contains("grant_of_asylum")){
+        if(getBulletin().contains("grant_of_asylum")){
             document = "grant_of_asylum";
         }
 
