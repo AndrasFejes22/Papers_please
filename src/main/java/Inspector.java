@@ -1,20 +1,18 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Inspector {
 
     public String bulletin;
-    Map<String, String> person;
+    //Map<String, String> person;
 
     public String getBulletin() {
         return bulletin;
     }
 
-    public Map<String, String> getPerson() {
-        return person;
-    }
+    //public Map<String, String> getPerson() {
+        //return person;
+    //}
 
     /**
      * String bulletin = "Entrants require passport\n" +
@@ -52,18 +50,23 @@ public class Inspector {
 
     public String inspect(Map<String, String> person) {
         System.out.println("ORDER: " +getBulletin());
+        System.out.println("size: " +person.size());
+        System.out.println(getTokensWithCollection(person));
         String document = "";
         if(getBulletin().contains("passport")){
             document = "passport";
         }
-        if(getBulletin().contains("access permit")){
-            document = "access permit";
+        if(getBulletin().contains("ID card")){
+            document = "ID card";
         }
         if(getBulletin().contains("access permit")){
             document = "access permit";
         }
         if(getBulletin().contains("grant_of_asylum")){
             document = "grant_of_asylum";
+        }
+        if(getBulletin().contains("work pass")){
+            document = "work pass";
         }
 
         Set<Map.Entry<String, String>> entrySet = person.entrySet();
@@ -73,16 +76,42 @@ public class Inspector {
 
         for (Map.Entry<String, String> entry : entrySet) {
 
+            //System.out.println(entry.getKey() +" ---> " + entry.getValue());
+
             documents1.add(entry.getKey());
             documents2.add(entry.getValue());
         }
-        System.out.println(documents1);
-        System.out.println(documents2);
+
+        //System.out.println("dok1: "+documents1);
+        //System.out.println("dok2: "+documents2);
+
+
+
+        //String[] array = documents2.toArray(new String[0]);
+        //System.out.println("array: " + Arrays.toString(array));
+        System.out.println("--------------------------------");
+        //System.out.println(documents1);
+        //System.out.println(documents2);
         if(!documents1.contains(document) && !documents2.contains(document) ){
             return "Entry denied: missing required " + document + ".";
         } else {
             return "Glory to Arstotzka.";
         }
 
+    }
+
+    public static List<String> getTokensWithCollection(Map<String, String> person) {
+
+        StringBuilder stringBuilder = new StringBuilder();
+        Set<Map.Entry<String, String>> entrySet = person.entrySet();
+        for (Map.Entry<String, String> entry : entrySet) {
+            //str = entry.getValue();
+            stringBuilder.append(entry.getValue());
+        }
+        String str = stringBuilder.toString();
+
+        return Collections.list(new StringTokenizer(str, "\n")).stream()
+                .map(token -> (String) token)
+                .collect(Collectors.toList());
     }
 }

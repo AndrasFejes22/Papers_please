@@ -10,7 +10,12 @@ class InspectorTest {
     @Test
     public void preliminaryTraining() {
         Inspector inspector = new Inspector();
-        inspector.receiveBulletin("Entrants require passport\nAllow citizens of Arstotzka, Obristan");
+        //inspector.receiveBulletin("Entrants require passport\nAllow citizens of Arstotzka, Obristan");
+        //inspector.receiveBulletin("Citizens of Arstotzka require ID card");
+        inspector.receiveBulletin("Workers require work pass");
+        Map<String, String> johnDoe = new HashMap<>();
+        johnDoe.put("work pass", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Doe, John\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1983.03.15");
+
 
         Map<String, String> josef = new HashMap<>();
         josef.put("passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1983.03.15");
@@ -23,7 +28,7 @@ class InspectorTest {
         roman.put("grant_of_asylum", "NAME: Dolanski, Roman\nNATION: United Federation\nID#: Y3MNC-TPWQ2\nDOB: 1933.01.01\nHEIGHT: 176cm\nWEIGHT: 71kg\nEXP: 1983.09.20");
 
         //assertEquals("Glory to Arstotzka.", inspector.inspect(josef));
-        assertEquals("Entry denied: missing required passport.", inspector.inspect(guyovich));
+        assertEquals("Glory to Arstotzka.", inspector.inspect(johnDoe));
         //assertEquals("Detainment: ID number mismatch.", inspector.inspect(roman));
     }
 
