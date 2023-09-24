@@ -4,6 +4,11 @@ import java.util.stream.Collectors;
 public class Main {
     public static void main(String[] args) {
 
+        String s = "ID#: WK9XA-LKM0Q\nNATION: United Federation\nNAME: Dolanski, Roman\nDOB: 1933.01.01\nSEX: M\nISS: Shingleton\nEXP: 1983.05.12";
+        String[] results = s.split("\n");
+        //System.out.println(Arrays.toString(results));
+        //System.out.println(results[0]);
+
         Inspector inspector = new Inspector();
         inspector.receiveBulletin("Entrants require passport\nAllow citizens of Arstotzka, Obristan");
 
@@ -24,8 +29,10 @@ public class Main {
         roman.put("passport", "ID#: WK9XA-LKM0Q\nNATION: United Federation\nNAME: Dolanski, Roman\nDOB: 1933.01.01\nSEX: M\nISS: Shingleton\nEXP: 1983.05.12");
         roman.put("grant_of_asylum", "NAME: Dolanski, Roman\nNATION: United Federation\nID#: Y3MNC-TPWQ2\nDOB: 1933.01.01\nHEIGHT: 176cm\nWEIGHT: 71kg\nEXP: 1983.09.20");
 
-        System.out.println("inspect roman: ");
-        System.out.println(inspector.inspect(roman));
+        System.out.println(Inspector.comppareOfDatas(roman));
+
+        //System.out.println("inspect roman: ");
+        //System.out.println(inspector.inspect(roman));
 
         /*
         System.out.println(Inspector.getTokensWithCollection(roman));

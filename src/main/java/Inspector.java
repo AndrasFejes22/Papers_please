@@ -51,7 +51,8 @@ public class Inspector {
     public String inspect(Map<String, String> person) {
         System.out.println("ORDER: " +getBulletin());
         System.out.println("size: " +person.size());
-        System.out.println(getTokensWithCollection(person));
+
+        //System.out.println(getTokensWithCollection(person));
         String document = "";
         if(getBulletin().contains("passport")){
             document = "passport";
@@ -92,6 +93,15 @@ public class Inspector {
         System.out.println("--------------------------------");
         //System.out.println(documents1);
         //System.out.println(documents2);
+        //Entry denied: citizen of banned nation.
+        if(getBannedNation(person)){
+            return "Entry denied: citizen of banned nation.";
+        }
+        if(person.size() > 1){
+            if(comppareOfDatas(person)){
+                return "Detainment: ID number mismatch.";
+            }
+        }
         if(!documents1.contains(document) && !documents2.contains(document) ){
             return "Entry denied: missing required " + document + ".";
         } else {
@@ -99,6 +109,89 @@ public class Inspector {
         }
 
     }
+
+    public static boolean comppareOfDatas(Map<String, String> person) {
+        List<String[]> stringAttayList = new ArrayList<>();
+        String string = getDataString(person);
+        String[] results = string.split("\n");
+        System.out.println(Arrays.toString(results));
+        //System.out.println("results[0]: "+results[0]);
+        //System.out.println("results[8]: "+results[8]);
+        for (int i = 0; i < results.length; i++) {
+
+            String[] pairs = results[i].split(": ");
+            stringAttayList.add(pairs);
+
+        }
+        /*
+        System.out.println("pairsList: " + Arrays.toString(stringAttayList.get(0)));
+        System.out.println("pairsList: " + Arrays.toString(stringAttayList.get(8)));
+        System.out.println("pairsList: " + stringAttayList.get(0)[1]);
+        System.out.println("pairsList: " + stringAttayList.get(8)[1]);
+
+         */
+
+        for (int i = 0; i < stringAttayList.size(); i++) {
+            for (int j = 0; j < stringAttayList.size(); j++) {
+                if(stringAttayList.get(i)[0].equals(stringAttayList.get(j)[0]) && (!stringAttayList.get(i)[1].equals(stringAttayList.get(j)[1]))){
+                    System.out.println("mismatch: "+stringAttayList.get(i)[1] +" ---> "+ stringAttayList.get(j)[1]);
+                    return true;
+                }
+            }
+
+        }
+
+        return false;
+    }
+
+    public static boolean getBannedNation(Map<String, String> person){
+        List<String[]> stringAttayList = new ArrayList<>();
+        String string = getDataString(person);
+        String[] results = string.split("\n");
+        System.out.println(Arrays.toString(results));
+
+        for (int i = 0; i < results.length; i++) {
+            String[] pairs = results[i].split(": ");
+            stringAttayList.add(pairs);
+        }
+
+        for (int i = 0; i < stringAttayList.size(); i++) {
+            for (int j = 0; j < stringAttayList.size(); j++) {
+                if(stringAttayList.get(i)[1].equals(IMPOR) || stringAttayList.get(i)[1].equals(ARSTOTZKA)){ // nem jó, lehet: Allow citizens of Arstotzka is!
+                    System.out.println("nation: "+stringAttayList.get(i)[1]);
+                    return true;
+                }
+            }
+
+        }
+
+        return false;
+    }
+
+    public static boolean wantedPerson(Map<String, String> person, String wantePerson){
+        List<String[]> stringAttayList = new ArrayList<>();
+        String string = getDataString(person);
+        String[] results = string.split("\n");
+        System.out.println(Arrays.toString(results));
+
+        for (int i = 0; i < results.length; i++) {
+            String[] pairs = results[i].split(": ");
+            stringAttayList.add(pairs);
+        }
+
+        for (int i = 0; i < stringAttayList.size(); i++) {
+            for (int j = 0; j < stringAttayList.size(); j++) {
+                if(stringAttayList.get(i)[1].equals(IMPOR)){
+                    System.out.println("nation: "+stringAttayList.get(i)[0]);
+                    return true;
+                }
+            }
+
+        }
+
+        return false;
+    }
+
 
     public static List<String> getTokensWithCollection(Map<String, String> person) {
 
@@ -114,4 +207,23 @@ public class Inspector {
                 .map(token -> (String) token)
                 .collect(Collectors.toList());
     }
+
+    public static String getDataString(Map<String, String> person) {
+
+        StringBuilder stringBuilder = new StringBuilder();
+        Set<Map.Entry<String, String>> entrySet = person.entrySet();
+        for (Map.Entry<String, String> entry : entrySet) {
+            //str = entry.getValue();
+            if(entry.getValue().contains("NAME")){
+                stringBuilder.append(entry.getValue()).append("\n");
+            } else {
+                stringBuilder.append(entry.getValue());
+            }
+        }
+        String str = stringBuilder.toString();
+
+        return str;
+
+    }
+
 }
