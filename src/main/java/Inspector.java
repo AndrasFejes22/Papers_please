@@ -108,6 +108,9 @@ public class Inspector {
         if(getBannedNation(person)){
             return "Entry denied: citizen of banned nation.";
         }
+        if(expiredDates(extractDataFromPreson(person, "EXP"))){
+            return "Entry denied: passport expired.";
+        }
         if(person.size() > 1){
             if(comppareOfDatas(person)){
                 return "Detainment: ID number mismatch.";
@@ -226,6 +229,31 @@ public class Inspector {
         }
 
         return false;
+    }
+
+    public static String extractDataFromPreson(Map<String, String> person, String input){
+        List<String[]> stringAttayList = new ArrayList<>();
+        String string = getDataString(person);
+        String[] results = string.split("\n");
+        System.out.println(Arrays.toString(results));
+
+        String extractedData = "";
+
+        for (int i = 0; i < results.length; i++) {
+            String[] pairs = results[i].split(": ");
+            stringAttayList.add(pairs);
+        }
+
+        for (int i = 0; i < stringAttayList.size(); i++) {
+            for (int j = 0; j < stringAttayList.size(); j++) {
+                if(stringAttayList.get(i)[0].equals(input)){//nem jo csak kopipésztelve lett
+                    extractedData = stringAttayList.get(i)[1];
+                }
+            }
+
+        }
+
+        return extractedData;
     }
 
     public static String createPersonName(String input){ //Costanza, Josef

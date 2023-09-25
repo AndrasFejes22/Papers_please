@@ -73,4 +73,12 @@ class InspectorTest {
     void createPersonNameTest() {
         assertEquals("Josef Costanza", Inspector.createPersonName("Costanza, Josef"));
     }
+
+    @Test
+    void extractDataFromPresonTest() {
+        Map<String, String> johnDoe = new HashMap<>();
+        johnDoe.put("work pass", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Doe, John\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1983.03.15");
+
+        assertEquals("1983.03.15", Inspector.extractDataFromPreson(johnDoe, "EXP"));
+    }
 }
