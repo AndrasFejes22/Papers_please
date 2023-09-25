@@ -1,3 +1,5 @@
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,6 +46,8 @@ public class Inspector {
     public final static String REPUBLIA = "Republia";
     public final static String UNITED_FEDERATION = "United Federation";
 
+    public final static String expireDate = "1981.11.22";
+
     public void receiveBulletin(String bulletin) {
         this.bulletin= bulletin;
     }
@@ -51,6 +55,7 @@ public class Inspector {
     public String inspect(Map<String, String> person) {
         System.out.println("ORDER: " +getBulletin());
         System.out.println("size: " +person.size());
+        String wantedPerson = "";
 
         //System.out.println(getTokensWithCollection(person));
         String document = "";
@@ -68,6 +73,12 @@ public class Inspector {
         }
         if(getBulletin().contains("work pass")){
             document = "work pass";
+        }
+        if(getBulletin().contains("Wanted")){
+            wantedPerson = createPersonNameFromBulletin(getBulletin());
+            if(wantedPerson(person, wantedPerson)){
+                return "Detainment: Entrant is a wanted criminal.";
+            }
         }
 
         Set<Map.Entry<String, String>> entrySet = person.entrySet();
@@ -108,6 +119,23 @@ public class Inspector {
             return "Glory to Arstotzka.";
         }
 
+    }
+
+    public static boolean expiredDates(String date){
+        //a document is considered expired if the expiration date is November 22, 1982 or earlier
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        LocalDate dateOfEntrant = LocalDate.parse(date, formatter);
+        System.out.println("date of entrant: "+dateOfEntrant);
+
+        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        LocalDate dateOfExpire = LocalDate.parse(expireDate, formatter2);
+        System.out.println("exp date: "+dateOfExpire);
+
+        if(dateOfEntrant.isEqual(dateOfExpire) || dateOfEntrant.isBefore(dateOfExpire)){
+            return true;
+        }
+        return false;
     }
 
     public static boolean comppareOfDatas(Map<String, String> person) {
@@ -168,11 +196,14 @@ public class Inspector {
         return false;
     }
 
-    public static boolean wantedPerson(Map<String, String> person, String wantePerson){
+    public static boolean wantedPerson(Map<String, String> person, String wantedPerson){
         List<String[]> stringAttayList = new ArrayList<>();
         String string = getDataString(person);
         String[] results = string.split("\n");
         System.out.println(Arrays.toString(results));
+
+        String personName = "";
+        String alteredName = "";
 
         for (int i = 0; i < results.length; i++) {
             String[] pairs = results[i].split(": ");
@@ -181,15 +212,34 @@ public class Inspector {
 
         for (int i = 0; i < stringAttayList.size(); i++) {
             for (int j = 0; j < stringAttayList.size(); j++) {
-                if(stringAttayList.get(i)[1].equals(IMPOR)){
-                    System.out.println("nation: "+stringAttayList.get(i)[0]);
-                    return true;
+                if(stringAttayList.get(i)[0].equals("NAME")){//nem jo csak kopipésztelve lett
+                    personName = stringAttayList.get(i)[1];
+                    alteredName = createPersonName(personName);
+
+                    //System.out.println("nation: "+stringAttayList.get(i)[0]);
+                    if(alteredName.equals(wantedPerson)) {
+                        return true;
+                    }
                 }
             }
 
         }
 
         return false;
+    }
+
+    public static String createPersonName(String input){ //Costanza, Josef
+        String[] array = input.split(", ");
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(array[1]).append(" ").append(array[0]);
+        return stringBuilder.toString();
+    }
+
+    public static String createPersonNameFromBulletin(String input){ //Wanted by the State: Hubert Popovic
+        String[] array = input.split(" ");
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(array[1]);
+        return stringBuilder.toString();
     }
 
 
@@ -214,7 +264,7 @@ public class Inspector {
         Set<Map.Entry<String, String>> entrySet = person.entrySet();
         for (Map.Entry<String, String> entry : entrySet) {
             //str = entry.getValue();
-            if(entry.getValue().contains("NAME")){
+            if(entry.getValue().contains("NAME")){ // a NAME-nál be kell tenni egy sortörést több sor (több pu) esetén
                 stringBuilder.append(entry.getValue()).append("\n");
             } else {
                 stringBuilder.append(entry.getValue());

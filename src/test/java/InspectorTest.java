@@ -6,6 +6,27 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class InspectorTest {
+    /**
+     * bulletin(s) :" Entrants require passport
+     * Allow citizens of Arstotzka
+     * Wanted by the State: Vadim Khan"
+     * entrant's: nation: "Republia"
+     * Expected test result: "Entry denied: citizen of banned nation."
+     * -----------
+     * November 23rd, 1982
+     * ORDER: Entrants require passport
+     * Allow citizens of Arstotzka
+     * Wanted by the State: Otto Vyas
+     * [passport]
+     * [NATION: United Federation
+     * DOB: 1952.03.05
+     * SEX: F
+     * ISS: Korista City
+     * ID#: R2B26-M3PO5
+     * EXP: 1981.09.29
+     * NAME: Yankov, Cecelia]
+     * Expected test result: Entry denied: passport expired--> a document is considered expired if the expiration date is November 22, 1982 or earlier
+     * */
 
     @Test
     public void preliminaryTraining() {
@@ -32,4 +53,24 @@ class InspectorTest {
         assertEquals("Entry denied: citizen of banned nation.", inspector.inspect(roman));//még nem jo
     }
 
+    @Test
+    void expireDatesTest() {
+        assertEquals("Entry denied: passport expired.", Inspector.expiredDates("1981.09.20"));
+        assertEquals("Entry denied: passport expired.", Inspector.expiredDates("1981.11.22"));
+    }
+
+    @Test
+    void wantedPersonTest() {
+
+        Map<String, String> josef = new HashMap<>();
+        josef.put("passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1983.03.15");
+
+        assertTrue(Inspector.wantedPerson(josef, "Josef Costanza"));
+        //assertFalse(Inspector.wantedPerson(josef, "Hubert Popovic"));
+    }
+
+    @Test
+    void createPersonNameTest() {
+        assertEquals("Josef Costanza", Inspector.createPersonName("Costanza, Josef"));
+    }
 }
