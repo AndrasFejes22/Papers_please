@@ -51,6 +51,49 @@ class InspectorTest {
         //assertEquals("Glory to Arstotzka.", inspector.inspect(josef));
         //assertEquals("Glory to Arstotzka.", inspector.inspect(johnDoe));
         assertEquals("Entry denied: citizen of banned nation.", inspector.inspect(roman));//még nem jo
+
+
+    }
+
+    @Test
+    public void preliminaryTraining2() {
+        Inspector inspector = new Inspector();
+        inspector.receiveBulletin("Entrants require passport\nAllow citizens of Arstotzka, Obristan\nWanted by the State: Dimitry Kovacs");
+        //inspector.receiveBulletin("Citizens of Arstotzka require ID card");
+        //inspector.receiveBulletin("Wanted by the State: Dimitry Kovacs");
+        Map<String, String> DimitryKovacs = new HashMap<>();
+        DimitryKovacs.put("passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Kovacs, Dimitry\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1983.03.15");
+        assertEquals("Detainment: Entrant is a wanted criminal.", inspector.inspect(DimitryKovacs));//még nem jo
+
+    }
+
+    @Test
+    public void preliminaryTraining3() {
+        Inspector inspector = new Inspector();
+        inspector.receiveBulletin("Entrants require passport\nAllow citizens of Arstotzka\nWanted by the State: William Pearl");
+        //inspector.receiveBulletin("Citizens of Arstotzka require ID card");
+        //inspector.receiveBulletin("Wanted by the State: Dimitry Kovacs");
+        Map<String, String> KostovetskyNaomi = new HashMap<>();
+        //"passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1983.03.15"
+        KostovetskyNaomi.put("", "NATION: Impor\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1981.12.24\nNAME: Smirnov, Sophia");
+        assertEquals("Entry denied: citizen of banned nation.", inspector.inspect(KostovetskyNaomi));//még nem jo
+
+    }
+
+    //ORDER: Allow citizens of Antegria, Impor, Kolechia, Obristan, Republia, United Federation
+    //example 1: Allow citizens of Obristan
+    //example 2: Deny citizens of Kolechia, Republia
+    @Test
+    public void preliminaryTraining4() {
+        Inspector inspector = new Inspector();
+        inspector.receiveBulletin("Allow citizens of Antegria, Impor, Kolechia, Obristan, Republia, United Federation\nWanted by the State: William Pearl");
+        //inspector.receiveBulletin("Citizens of Arstotzka require ID card");
+        //inspector.receiveBulletin("Wanted by the State: Dimitry Kovacs");
+        Map<String, String> KostovetskyNaomi = new HashMap<>();
+        //"passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1983.03.15"
+        KostovetskyNaomi.put("", "NATION: Republia\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1981.12.24\nNAME: Smirnov, Sophia");
+        assertEquals("Cause no trouble.", inspector.inspect(KostovetskyNaomi));//még nem jo
+
     }
 
     @Test
@@ -72,6 +115,7 @@ class InspectorTest {
     @Test
     void createPersonNameTest() {
         assertEquals("Josef Costanza", Inspector.createPersonName("Costanza, Josef"));
+        assertEquals("Dimitry Kovacs", Inspector.createPersonName("Kovacs, Dimitry"));
     }
 
     @Test

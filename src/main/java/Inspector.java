@@ -53,74 +53,60 @@ public class Inspector {
     }
 
     public String inspect(Map<String, String> person) {
-        System.out.println("ORDER: " +getBulletin());
-        System.out.println("size: " +person.size());
+        System.out.println("Nation?"+extractDataFromPreson(person, "NATION"));
+        System.out.println("ORDER: " + getBulletin());
+        System.out.println("----------------------");
+        System.out.println("size: " + person.size());
         String wantedPerson = "";
-
-        //System.out.println(getTokensWithCollection(person));
-        String document = "";
-        if(getBulletin().contains("passport")){
-            document = "passport";
-        }
-        if(getBulletin().contains("ID card")){
-            document = "ID card";
-        }
-        if(getBulletin().contains("access permit")){
-            document = "access permit";
-        }
-        if(getBulletin().contains("grant_of_asylum")){
-            document = "grant_of_asylum";
-        }
-        if(getBulletin().contains("work pass")){
-            document = "work pass";
-        }
-        if(getBulletin().contains("Wanted")){
-            wantedPerson = createPersonNameFromBulletin(getBulletin());
-            if(wantedPerson(person, wantedPerson)){
-                return "Detainment: Entrant is a wanted criminal.";
-            }
-        }
-
         Set<Map.Entry<String, String>> entrySet = person.entrySet();
 
         List<String> documents1 = new ArrayList<>();
         List<String> documents2 = new ArrayList<>();
 
         for (Map.Entry<String, String> entry : entrySet) {
-
-            //System.out.println(entry.getKey() +" ---> " + entry.getValue());
-
             documents1.add(entry.getKey());
             documents2.add(entry.getValue());
         }
 
-        //System.out.println("dok1: "+documents1);
-        //System.out.println("dok2: "+documents2);
-
-
-
-        //String[] array = documents2.toArray(new String[0]);
-        //System.out.println("array: " + Arrays.toString(array));
-        System.out.println("--------------------------------");
-        //System.out.println(documents1);
-        //System.out.println(documents2);
-        //Entry denied: citizen of banned nation.
-        if(getBannedNation(person)){
-            return "Entry denied: citizen of banned nation.";
+        String document = "";
+        if (getBulletin().contains("passport")) {
+            document = "passport";
         }
-        if(expiredDates(extractDataFromPreson(person, "EXP"))){
-            return "Entry denied: passport expired.";
+        if (getBulletin().contains("ID card")) {
+            document = "ID card";
         }
-        if(person.size() > 1){
-            if(comppareOfDatas(person)){
-                return "Detainment: ID number mismatch.";
+        if (getBulletin().contains("access permit")) {
+            document = "access permit";
+        }
+        if (getBulletin().contains("grant_of_asylum")) {
+            document = "grant_of_asylum";
+        }
+        if (getBulletin().contains("work pass")) {
+            document = "work pass";
+        }
+        if (getBulletin().contains("Wanted")) {
+            System.out.println("WANTED!");
+            wantedPerson = createPersonNameFromBulletin(getBulletin());
+            System.out.println("wantedPerson: " + wantedPerson);
+            if (wantedPerson(person, wantedPerson)) {
+                System.out.println("Wantedperson matching!");
+                return "Detainment: Entrant is a wanted criminal.";
             }
         }
-        if(!documents1.contains(document) && !documents2.contains(document) ){
+        if (getBannedNation(person)) {
+            return "Entry denied: citizen of banned nation.";
+        } else if (expiredDates(extractDataFromPreson(person, "EXP"))) {
+            return "Entry denied: passport expired.";
+        } else if (person.size() > 1) {
+            if (comppareOfDatas(person)) {
+                return "Detainment: ID number mismatch.";
+            }
+        } else if (!documents1.contains(document) && !documents2.contains(document)) {
             return "Entry denied: missing required " + document + ".";
         } else {
             return "Glory to Arstotzka.";
         }
+        return "END";
 
     }
 
@@ -176,6 +162,7 @@ public class Inspector {
     }
 
     public static boolean getBannedNation(Map<String, String> person){
+        System.out.println("getBannedNation in process...");
         List<String[]> stringAttayList = new ArrayList<>();
         String string = getDataString(person);
         String[] results = string.split("\n");
@@ -185,10 +172,12 @@ public class Inspector {
             String[] pairs = results[i].split(": ");
             stringAttayList.add(pairs);
         }
-
+        ////There are a total of 7 countries: Arstotzka, Antegria, Impor, Kolechia, Obristan, Republia, and United Federation.
+        System.out.println("Nation_inmethod?  "+extractDataFromPreson(person, " NATION"));
         for (int i = 0; i < stringAttayList.size(); i++) {
             for (int j = 0; j < stringAttayList.size(); j++) {
-                if(stringAttayList.get(i)[1].equals(IMPOR) || stringAttayList.get(i)[1].equals(ARSTOTZKA)){ // nem jó, lehet: Allow citizens of Arstotzka is!
+                if(stringAttayList.get(i)[1].trim().equals(IMPOR) || stringAttayList.get(i)[1].trim().equals(ANTEGRIA) || stringAttayList.get(i)[1].trim().equals(KOLECHIA)
+                        || stringAttayList.get(i)[1].trim().equals(OBRISTAN) || stringAttayList.get(i)[1].trim().equals(REPUBLIA) || stringAttayList.get(i)[1].trim().equals(UNITED_FEDERATION)){ // nem jó, lehet: Allow citizens of Arstotzka is!
                     System.out.println("nation: "+stringAttayList.get(i)[1]);
                     return true;
                 }
@@ -240,7 +229,7 @@ public class Inspector {
         String extractedData = "";
 
         for (int i = 0; i < results.length; i++) {
-            String[] pairs = results[i].split(": ");
+            String[] pairs = results[i].split(":");
             stringAttayList.add(pairs);
         }
 
@@ -264,7 +253,7 @@ public class Inspector {
     }
 
     public static String createPersonNameFromBulletin(String input){ //Wanted by the State: Hubert Popovic
-        String[] array = input.split(" ");
+        String[] array = input.split(": ");
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(array[1]);
         return stringBuilder.toString();
