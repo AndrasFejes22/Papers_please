@@ -4,6 +4,8 @@ import java.util.stream.Collectors;
 public class Main {
     public static void main(String[] args) {
 
+
+
         String s = "ID#: WK9XA-LKM0Q\nNATION: United Federation\nNAME: Dolanski, Roman\nDOB: 1933.01.01\nSEX: M\nISS: Shingleton\nEXP: 1983.05.12";
         String[] results = s.split("\n");
         //System.out.println(Arrays.toString(results));

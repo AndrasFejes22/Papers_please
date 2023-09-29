@@ -53,7 +53,9 @@ public class Inspector {
     }
 
     public String inspect(Map<String, String> person) {
-        System.out.println("Nation?"+extractDataFromPreson(person, "NATION"));
+        System.out.println("KEY: "+getkey(person)); //person dokument
+        System.out.println("VALUE: "+getValue(person)); //person dokument
+        System.out.println("Nation?"+ extractDataFromPerson(person, "NATION"));
         System.out.println("ORDER: " + getBulletin());
         System.out.println("----------------------");
         System.out.println("size: " + person.size());
@@ -75,7 +77,7 @@ public class Inspector {
         if (getBulletin().contains("ID card")) {
             document = "ID card";
         }
-        if (getBulletin().contains("access permit")) {
+        if (getBulletin().contains("access permit")) {//--> csereszabatos legyen az acces_permit-tel
             document = "access permit";
         }
         if (getBulletin().contains("grant_of_asylum")) {
@@ -93,20 +95,32 @@ public class Inspector {
                 return "Detainment: Entrant is a wanted criminal.";
             }
         }
-        if (getBannedNation(person)) {
-            return "Entry denied: citizen of banned nation.";
-        } else if (expiredDates(extractDataFromPreson(person, "EXP"))) {
-            return "Entry denied: passport expired.";
-        } else if (person.size() > 1) {
+        //System.out.println("BANNED?");
+        //System.out.println("getbanned: "+getBannedNation(person));
+        //if (getBannedNation(person).equals("Deny")) {
+        if (person.size() > 1) {
             if (comppareOfDatas(person)) {
                 return "Detainment: ID number mismatch.";
             }
-        } else if (!documents1.contains(document) && !documents2.contains(document)) {
+        }
+        if (getBannedNation(person)) {
+            return "Entry denied: citizen of banned nation.";
+        } else if (expiredDates(extractDataFromPerson(person, "EXP"))) {
+            return "Entry denied: passport expired.";
+        /*} else if (person.size() > 1) {
+            if (comppareOfDatas(person)) {
+                return "Detainment: ID number mismatch.";
+            }*/
+        //} else if (!documents1.contains(document) && !documents2.contains(document)) {
+        } else if (getBulletin().contains(document)&& !getkey(person).contains(document)) {
             return "Entry denied: missing required " + document + ".";
         } else {
-            return "Glory to Arstotzka.";
+            if(extractDataFromPerson(person, "NATION").equals("Arstotzka")){
+                return "Glory to Arstotzka.";
+            }
+            return "Cause no trouble.";
         }
-        return "END";
+        //return "END";
 
     }
 
@@ -161,31 +175,97 @@ public class Inspector {
         return false;
     }
 
-    public static boolean getBannedNation(Map<String, String> person){
-        System.out.println("getBannedNation in process...");
-        List<String[]> stringAttayList = new ArrayList<>();
-        String string = getDataString(person);
-        String[] results = string.split("\n");
-        System.out.println(Arrays.toString(results));
+    //public String getBannedNation(Map<String, String> person){
+    public boolean getBannedNation(Map<String, String> person){
+        //System.out.println(person);
+        String data = extractDataFromPerson(person, "NATION");
+        System.out.println("data:" + data);
+        List<List<String>> nations = nations(getBulletin());
+        System.out.println("nations.get(0): " + nations.get(0));
+        //System.out.println("nations.get(1): "+nations.get(1));
+        System.out.println("----");
 
-        for (int i = 0; i < results.length; i++) {
-            String[] pairs = results[i].split(": ");
-            stringAttayList.add(pairs);
-        }
-        ////There are a total of 7 countries: Arstotzka, Antegria, Impor, Kolechia, Obristan, Republia, and United Federation.
-        System.out.println("Nation_inmethod?  "+extractDataFromPreson(person, " NATION"));
-        for (int i = 0; i < stringAttayList.size(); i++) {
-            for (int j = 0; j < stringAttayList.size(); j++) {
-                if(stringAttayList.get(i)[1].trim().equals(IMPOR) || stringAttayList.get(i)[1].trim().equals(ANTEGRIA) || stringAttayList.get(i)[1].trim().equals(KOLECHIA)
-                        || stringAttayList.get(i)[1].trim().equals(OBRISTAN) || stringAttayList.get(i)[1].trim().equals(REPUBLIA) || stringAttayList.get(i)[1].trim().equals(UNITED_FEDERATION)){ // nem jó, lehet: Allow citizens of Arstotzka is!
-                    System.out.println("nation: "+stringAttayList.get(i)[1]);
+        if (getBulletin().contains("Deny")) {
+            for (int i = 0; i < nations.get(0).size(); i++) {
+                if (nations.get(0).get(i).equals(data)) {
                     return true;
                 }
             }
 
-        }
+        } else if (getBulletin().contains("Allow")) {
+            nations.get(0).add("Arstotzka");
+            System.out.println("nations.get(0)_1: " + nations.get(0));
+            for (int i = 0; i < nations.get(0).size(); i++) {
+                if (nations.get(0).get(i).equals(data)) {
+                    return false;
+                }
+            }
 
-        return false;
+        }
+        return true;
+
+        /*
+        for (int i = 0; i < nations.get(0).size(); i++) {
+            System.out.println("FOR");
+            System.out.println("i:"+nations.get(0).get(i));
+            System.out.println((nations.get(0).get(i).equals(data) && getBulletin().contains("Deny")));
+            if (nations.get(0).get(i).equals(data) && getBulletin().contains("Deny")) {
+
+                System.out.println("getbanned_IF"+nations.get(0).get(i));
+                return "Deny";
+
+            } else if(nations.get(0).get(i).equals(data) && getBulletin().contains("Allow")){
+                return "Allow";
+            }
+        }
+        return "ERROR";
+        */
+    }
+
+
+    // nations method--> HA a "Deny citizens of... vagy "Allow citizens of... részek nem az elején vannak? (mert akkor ebben hogy bulletinArray[0], a 0 nem igaz...)**
+    //"Deny citizens of Kolechia, Republia\nWanted by the State: William Pearl"
+    //"Deny citizens of Kolechia, Republia"
+    public static List<List<String>> nations(String bulletin){
+        int numDeny = 0;
+        int numAllow = 0;
+        List<List<String>> allowedAndDeniedNations = new ArrayList<>();
+        List<String> allowedNationsList = new ArrayList<>();
+        List<String> deniedNationsList = new ArrayList<>();
+        //ORDER: Allow citizens of Antegria, Impor, Kolechia, Obristan, Republia, United Federation
+        //example 1: Allow citizens of Obristan
+        //example 2: Deny citizens of Kolechia, Republia
+        if(bulletin.contains("Allow")) {
+            //**akkor itt egy fori-ban meg kell nézni hogy a tömbben melyik stringben van az hogy "Deny"--> int
+            String[] bulletinArray = bulletin.split("\n");
+            for (int i = 0; i < bulletinArray.length; i++) {
+                if(bulletinArray[i].contains("Allow")){
+                    numDeny = i;
+                }
+            }
+            String[] bulletinArray2 = bulletinArray[numDeny].split("of");//*és itt [int]
+            String[] allovedNationsArray = bulletinArray2[1].split(",");
+            for (int i = 0; i < allovedNationsArray.length; i++) {
+                allowedNationsList.add(allovedNationsArray[i].trim());
+            }
+            allowedAndDeniedNations.add(allowedNationsList);
+
+        } else if(bulletin.contains("Deny")){
+
+            String[] bulletinArray = bulletin.split("\n");
+            for (int i = 0; i < bulletinArray.length; i++) {
+                if(bulletinArray[i].contains("Allow")){
+                    numAllow = i;
+                }
+            }
+            String[] bulletinArray2 = bulletinArray[numAllow].split("of");
+            String[] deniedNationsArray = bulletinArray2[1].split(",");
+            for (int i = 0; i < deniedNationsArray.length; i++) {
+                deniedNationsList.add(deniedNationsArray[i].trim());
+            }
+            allowedAndDeniedNations.add(deniedNationsList);
+        }
+        return allowedAndDeniedNations;
     }
 
     public static boolean wantedPerson(Map<String, String> person, String wantedPerson){
@@ -220,24 +300,42 @@ public class Inspector {
         return false;
     }
 
-    public static String extractDataFromPreson(Map<String, String> person, String input){
-        List<String[]> stringAttayList = new ArrayList<>();
+    public static String extractDataFromPerson(Map<String, String> person, String input){
+        List<String[]> stringArrayList = new ArrayList<>();
         String string = getDataString(person);
+        System.out.println("String input: "+string);
         String[] results = string.split("\n");
-        System.out.println(Arrays.toString(results));
+        System.out.println("results: "+Arrays.toString(results));
 
         String extractedData = "";
 
         for (int i = 0; i < results.length; i++) {
-            String[] pairs = results[i].split(":");
-            stringAttayList.add(pairs);
+            if(results[i].contains("NAME")){
+                String[] pairs = results[i].split(": ");
+                extractedData = pairs[1];
+            } else {
+                String[] pairs = results[i].split(", ");
+                stringArrayList.add(pairs[0].split(" "));
+            }
+
         }
 
-        for (int i = 0; i < stringAttayList.size(); i++) {
-            for (int j = 0; j < stringAttayList.size(); j++) {
-                if(stringAttayList.get(i)[0].equals(input)){//nem jo csak kopipésztelve lett
-                    extractedData = stringAttayList.get(i)[1];
+        System.out.println("list: ");
+        for (int i = 0; i < stringArrayList.size(); i++) {
+            System.out.println(Arrays.toString(stringArrayList.get(i)));
+        }
+        System.out.println("list_0: ");
+        System.out.println(Arrays.toString(stringArrayList.get(0)));
+        System.out.println("get(0)[0]: " + stringArrayList.get(0)[0]);
+        System.out.println("get(0)[1]: " + stringArrayList.get(0)[1]);
+
+        for (int i = 0; i < stringArrayList.size(); i++) {
+            for (int j = 0; j < stringArrayList.size(); j++) {
+
+                if(stringArrayList.get(i)[0].contains(input)){
+                    extractedData = stringArrayList.get(i)[1].trim();
                 }
+
             }
 
         }
@@ -274,6 +372,25 @@ public class Inspector {
                 .map(token -> (String) token)
                 .collect(Collectors.toList());
     }
+
+    public String getkey(Map<String, String> person){
+        StringBuilder stringBuilder = new StringBuilder();
+        Set<Map.Entry<String, String>> entrySet = person.entrySet();
+        for (Map.Entry<String, String> entry : entrySet) {
+            stringBuilder.append(entry.getKey() + " ");
+        }
+        return stringBuilder.toString();
+    }
+
+    public String getValue(Map<String, String> person){
+        StringBuilder stringBuilder = new StringBuilder();
+        Set<Map.Entry<String, String>> entrySet = person.entrySet();
+        for (Map.Entry<String, String> entry : entrySet) {
+            stringBuilder.append(entry.getValue() + " ");
+        }
+        return stringBuilder.toString();
+    }
+
 
     public static String getDataString(Map<String, String> person) {
 
