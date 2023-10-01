@@ -1,8 +1,13 @@
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
+
+        //LocalDate date = LocalDate.parse("2018.05.05");
+        String str1 = "Foreigners require access permit";
+        System.out.println("date: "+str1.contains("access permit"));
 
 
 

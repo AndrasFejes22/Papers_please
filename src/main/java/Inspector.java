@@ -46,7 +46,7 @@ public class Inspector {
     public final static String REPUBLIA = "Republia";
     public final static String UNITED_FEDERATION = "United Federation";
 
-    public final static String expireDate = "1981.11.22";
+    public final static String expireDate = "1982.11.22";
 
     public void receiveBulletin(String bulletin) {
         this.bulletin= bulletin;
@@ -54,6 +54,8 @@ public class Inspector {
 
     public String inspect(Map<String, String> person) {
         System.out.println("KEY: "+getkey(person)); //person dokument
+        String personGetKey = getkey(person);
+        personGetKey = personGetKey.replace("_", " ");
         System.out.println("VALUE: "+getValue(person)); //person dokument
         System.out.println("Nation?"+ extractDataFromPerson(person, "NATION"));
         System.out.println("ORDER: " + getBulletin());
@@ -100,19 +102,19 @@ public class Inspector {
         //if (getBannedNation(person).equals("Deny")) {
         if (person.size() > 1) {
             if (comppareOfDatas(person)) {
-                return "Detainment: ID number mismatch.";
+                return "Detainment: ID number mismatch."; //NEM jó, nem csak az ID lehet mismatch!
             }
         }
         if (getBannedNation(person)) {
             return "Entry denied: citizen of banned nation.";
-        } else if (expiredDates(extractDataFromPerson(person, "EXP"))) {
+        } else if (expiredDates(person)) {
             return "Entry denied: passport expired.";
         /*} else if (person.size() > 1) {
             if (comppareOfDatas(person)) {
                 return "Detainment: ID number mismatch.";
             }*/
         //} else if (!documents1.contains(document) && !documents2.contains(document)) {
-        } else if (getBulletin().contains(document)&& !getkey(person).contains(document)) {
+        } else if (getBulletin().contains(document)&& !personGetKey.contains(document)) {
             return "Entry denied: missing required " + document + ".";
         } else {
             if(extractDataFromPerson(person, "NATION").equals("Arstotzka")){
@@ -124,16 +126,23 @@ public class Inspector {
 
     }
 
-    public static boolean expiredDates(String date){
+    public static boolean expiredDates(Map<String, String> person){
+        LocalDate dateOfEntrant = LocalDate.now();
         //a document is considered expired if the expiration date is November 22, 1982 or earlier
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        LocalDate dateOfEntrant = LocalDate.parse(date, formatter);
-        System.out.println("date of entrant: "+dateOfEntrant);
+        String date = extractDataFromPerson(person, "EXP");
+        if(date.contains(".")){
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+            dateOfEntrant = LocalDate.parse(date, formatter);
+            System.out.println("date of entrant: "+dateOfEntrant);
+        }else {
+            dateOfEntrant = LocalDate.parse(date);
+        }
 
         DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         LocalDate dateOfExpire = LocalDate.parse(expireDate, formatter2);
         System.out.println("exp date: "+dateOfExpire);
+
 
         if(dateOfEntrant.isEqual(dateOfExpire) || dateOfEntrant.isBefore(dateOfExpire)){
             return true;
@@ -141,8 +150,8 @@ public class Inspector {
         return false;
     }
 
-    public static boolean comppareOfDatas(Map<String, String> person) {
-        List<String[]> stringAttayList = new ArrayList<>();
+    public static boolean comppareOfDatas(Map<String, String> person) { //az EXP lehet mismatch ha nem expired!
+        List<String[]> stringArrayList = new ArrayList<>();
         String string = getDataString(person);
         String[] results = string.split("\n");
         System.out.println(Arrays.toString(results));
@@ -151,21 +160,18 @@ public class Inspector {
         for (int i = 0; i < results.length; i++) {
 
             String[] pairs = results[i].split(": ");
-            stringAttayList.add(pairs);
+            stringArrayList.add(pairs);
 
         }
-        /*
-        System.out.println("pairsList: " + Arrays.toString(stringAttayList.get(0)));
-        System.out.println("pairsList: " + Arrays.toString(stringAttayList.get(8)));
-        System.out.println("pairsList: " + stringAttayList.get(0)[1]);
-        System.out.println("pairsList: " + stringAttayList.get(8)[1]);
 
-         */
+        for (int i = 0; i < stringArrayList.size(); i++) {
+            //System.out.println("stringArrayList: "+ Arrays.toString(stringArrayList.get(i)));
+        }
 
-        for (int i = 0; i < stringAttayList.size(); i++) {
-            for (int j = 0; j < stringAttayList.size(); j++) {
-                if(stringAttayList.get(i)[0].equals(stringAttayList.get(j)[0]) && (!stringAttayList.get(i)[1].equals(stringAttayList.get(j)[1]))){
-                    System.out.println("mismatch: "+stringAttayList.get(i)[1] +" ---> "+ stringAttayList.get(j)[1]);
+        for (int i = 0; i < stringArrayList.size(); i++) {
+            for (int j = 0; j < stringArrayList.size(); j++) {
+                if((stringArrayList.get(i)[0].equals(stringArrayList.get(j)[0]) && !stringArrayList.get(i)[0].equals("EXP")) && (!stringArrayList.get(i)[1].equals(stringArrayList.get(j)[1]))){
+                    System.out.println("mismatch: "+stringArrayList.get(i)[1] +" ---> "+ stringArrayList.get(j)[1]);
                     return true;
                 }
             }
@@ -176,16 +182,22 @@ public class Inspector {
     }
 
     //public String getBannedNation(Map<String, String> person){
-    public boolean getBannedNation(Map<String, String> person){
-        //System.out.println(person);
+    public boolean getBannedNation(Map<String, String> person){//itt az osszes letezo esetet le kell fedni, lást teszt
+        System.out.println("BULLETIN:" + getBulletin());
+        System.out.println("GETKEY: "+getkey(person));
+        //String getKey = getkey(person);
+
+        //getKey = getKey.replace("_", " ");
+        //System.out.println("new getkey: "+getKey);
         String data = extractDataFromPerson(person, "NATION");
         System.out.println("data:" + data);
         List<List<String>> nations = nations(getBulletin());
-        System.out.println("nations.get(0): " + nations.get(0));
+        //System.out.println("nations.get(0): " + nations.get(0));
         //System.out.println("nations.get(1): "+nations.get(1));
         System.out.println("----");
 
         if (getBulletin().contains("Deny")) {
+            System.out.println("DENY");
             for (int i = 0; i < nations.get(0).size(); i++) {
                 if (nations.get(0).get(i).equals(data)) {
                     return true;
@@ -193,33 +205,22 @@ public class Inspector {
             }
 
         } else if (getBulletin().contains("Allow")) {
+            System.out.println("ALLOW");
             nations.get(0).add("Arstotzka");
-            System.out.println("nations.get(0)_1: " + nations.get(0));
+            //System.out.println("nations.get(0)_1: " + nations.get(0));
             for (int i = 0; i < nations.get(0).size(); i++) {
                 if (nations.get(0).get(i).equals(data)) {
                     return false;
                 }
             }
 
+        }/*else if(getBulletin().contains(getKey)){
+            System.out.println("else_if_3");
+            return false;
         }
-        return true;
-
-        /*
-        for (int i = 0; i < nations.get(0).size(); i++) {
-            System.out.println("FOR");
-            System.out.println("i:"+nations.get(0).get(i));
-            System.out.println((nations.get(0).get(i).equals(data) && getBulletin().contains("Deny")));
-            if (nations.get(0).get(i).equals(data) && getBulletin().contains("Deny")) {
-
-                System.out.println("getbanned_IF"+nations.get(0).get(i));
-                return "Deny";
-
-            } else if(nations.get(0).get(i).equals(data) && getBulletin().contains("Allow")){
-                return "Allow";
-            }
-        }
-        return "ERROR";
-        */
+        System.out.println("new getkey2: "+getKey);
+        System.out.println("FALSE");*/
+        return false;
     }
 
 
@@ -303,9 +304,9 @@ public class Inspector {
     public static String extractDataFromPerson(Map<String, String> person, String input){
         List<String[]> stringArrayList = new ArrayList<>();
         String string = getDataString(person);
-        System.out.println("String input: "+string);
+        //System.out.println("String {: "+string + "}");
         String[] results = string.split("\n");
-        System.out.println("results: "+Arrays.toString(results));
+        //System.out.println("results: "+Arrays.toString(results));
 
         String extractedData = "";
 
@@ -314,20 +315,19 @@ public class Inspector {
                 String[] pairs = results[i].split(": ");
                 extractedData = pairs[1];
             } else {
-                String[] pairs = results[i].split(", ");
-                stringArrayList.add(pairs[0].split(" "));
+                String[] pairs = results[i].split(", "); // ation, DO
+                //System.out.println("pairs: "+ Arrays.toString(pairs));
+                //System.out.println("pairs[0]: "+ pairs[0]); // 1 elemű String tömbök, csak 0. tag van
+                //System.out.println("pairs[1]: "+ pairs[1]);
+                stringArrayList.add(pairs[0].split(":"));
             }
 
         }
-
+        // check:
         System.out.println("list: ");
         for (int i = 0; i < stringArrayList.size(); i++) {
-            System.out.println(Arrays.toString(stringArrayList.get(i)));
+            //System.out.println(Arrays.toString(stringArrayList.get(i)));
         }
-        System.out.println("list_0: ");
-        System.out.println(Arrays.toString(stringArrayList.get(0)));
-        System.out.println("get(0)[0]: " + stringArrayList.get(0)[0]);
-        System.out.println("get(0)[1]: " + stringArrayList.get(0)[1]);
 
         for (int i = 0; i < stringArrayList.size(); i++) {
             for (int j = 0; j < stringArrayList.size(); j++) {
@@ -343,7 +343,7 @@ public class Inspector {
         return extractedData;
     }
 
-    public static String createPersonName(String input){ //Costanza, Josef
+    public static String createPersonName(String input){ //Costanza, Josef --> Josef Costanza
         String[] array = input.split(", ");
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(array[1]).append(" ").append(array[0]);
@@ -357,21 +357,6 @@ public class Inspector {
         return stringBuilder.toString();
     }
 
-
-    public static List<String> getTokensWithCollection(Map<String, String> person) {
-
-        StringBuilder stringBuilder = new StringBuilder();
-        Set<Map.Entry<String, String>> entrySet = person.entrySet();
-        for (Map.Entry<String, String> entry : entrySet) {
-            //str = entry.getValue();
-            stringBuilder.append(entry.getValue());
-        }
-        String str = stringBuilder.toString();
-
-        return Collections.list(new StringTokenizer(str, "\n")).stream()
-                .map(token -> (String) token)
-                .collect(Collectors.toList());
-    }
 
     public String getkey(Map<String, String> person){
         StringBuilder stringBuilder = new StringBuilder();
