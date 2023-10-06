@@ -1,7 +1,6 @@
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Inspector {
 
@@ -53,8 +52,8 @@ public class Inspector {
     }
 
     public String inspect(Map<String, String> person) {
-        System.out.println("KEY: "+getkey(person)); //person dokument
-        String personGetKey = getkey(person);
+        System.out.println("KEY: "+ getKey(person)); //person dokument
+        String personGetKey = getKey(person);
         personGetKey = personGetKey.replace("_", " ");
         System.out.println("VALUE: "+getValue(person)); //person dokument
         System.out.println("Nation?"+ extractDataFromPerson(person, "NATION"));
@@ -100,21 +99,25 @@ public class Inspector {
         //System.out.println("BANNED?");
         //System.out.println("getbanned: "+getBannedNation(person));
         //if (getBannedNation(person).equals("Deny")) {
+        Data data = comppareOfDatas2(person);
         if (person.size() > 1) {
-            if (comppareOfDatas(person)) {
-                return "Detainment: ID number mismatch."; //NEM jó, nem csak az ID lehet mismatch!
+            if (data.isBol()) {
+            //if (comppareOfDatas(person)) {
+                //return "Detainment: ID number mismatch."; //NEM jó, nem csak az ID lehet mismatch!
+                return data.getString(); //NEM jó, nem csak az ID lehet mismatch!
             }
         }
+
         if (getBannedNation(person)) {
             return "Entry denied: citizen of banned nation.";
-        } else if (expiredDates(person)) {
+        } else if (expiredDates(person)) { //NEM jó, nem csak a passport lehet expired /acces permit, work pass, oltás?/!
             return "Entry denied: passport expired.";
         /*} else if (person.size() > 1) {
             if (comppareOfDatas(person)) {
                 return "Detainment: ID number mismatch.";
             }*/
         //} else if (!documents1.contains(document) && !documents2.contains(document)) {
-        } else if (getBulletin().contains(document)&& !personGetKey.contains(document)) {
+        } else if (getBulletin().contains(document)&& !personGetKey.contains(document) && !extractDataFromPerson(person, "NATION").equals("Arstotzka")) {
             return "Entry denied: missing required " + document + ".";
         } else {
             if(extractDataFromPerson(person, "NATION").equals("Arstotzka")){
@@ -126,31 +129,37 @@ public class Inspector {
 
     }
 
-    public static boolean expiredDates(Map<String, String> person){
-        LocalDate dateOfEntrant = LocalDate.now();
-        //a document is considered expired if the expiration date is November 22, 1982 or earlier
-
-        String date = extractDataFromPerson(person, "EXP");
-        if(date.contains(".")){
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-            dateOfEntrant = LocalDate.parse(date, formatter);
-            System.out.println("date of entrant: "+dateOfEntrant);
-        }else {
-            dateOfEntrant = LocalDate.parse(date);
+    public boolean expiredDates(Map<String, String> person){// ki kell szedni, h melyik járt le
+        System.out.println("GETKEY: "+getKey(person));
+        List<LocalDate> dateOfEntrant = new ArrayList<>();
+        List<String> dates = extractDataFromPerson2(person, "EXP");
+        System.out.println("DATE: "+dates);
+        for (int i = 0; i < dates.size(); i++) {
+            if(dates.get(i).contains(".")){
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+                dateOfEntrant.add(LocalDate.parse(dates.get(i), formatter));
+                System.out.println("date of entrant: "+dateOfEntrant);
+            }else {
+                dateOfEntrant.add(LocalDate.parse(dates.get(i)));
+            }
         }
 
         DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         LocalDate dateOfExpire = LocalDate.parse(expireDate, formatter2);
         System.out.println("exp date: "+dateOfExpire);
 
-
-        if(dateOfEntrant.isEqual(dateOfExpire) || dateOfEntrant.isBefore(dateOfExpire)){
-            return true;
+        for (int i = 0; i <dateOfEntrant.size(); i++) {
+            if(dateOfEntrant.get(i).isEqual(dateOfExpire) || dateOfEntrant.get(i).isBefore(dateOfExpire)){
+                return true;
+            }
         }
         return false;
     }
 
-    public static boolean comppareOfDatas(Map<String, String> person) { //az EXP lehet mismatch ha nem expired!
+    //az EXP lehet mismatch ha nem expired!
+    // bármely elem (NATION, NAME, stb lehet mismatch! "There is no conflicting information across the provided documents"
+    //egyszerűsíteni ezek a stringArrayList.get(i)[0]-ák érthetelenek. elemekre sw-case?
+    public static boolean comppareOfDatas(Map<String, String> person) {
         List<String[]> stringArrayList = new ArrayList<>();
         String string = getDataString(person);
         String[] results = string.split("\n");
@@ -171,6 +180,7 @@ public class Inspector {
         for (int i = 0; i < stringArrayList.size(); i++) {
             for (int j = 0; j < stringArrayList.size(); j++) {
                 if((stringArrayList.get(i)[0].equals(stringArrayList.get(j)[0]) && !stringArrayList.get(i)[0].equals("EXP")) && (!stringArrayList.get(i)[1].equals(stringArrayList.get(j)[1]))){
+                    System.out.println("document part: "+stringArrayList.get(i)[0]);
                     System.out.println("mismatch: "+stringArrayList.get(i)[1] +" ---> "+ stringArrayList.get(j)[1]);
                     return true;
                 }
@@ -181,10 +191,92 @@ public class Inspector {
         return false;
     }
 
+    public Data comppareOfDatas2(Map<String, String> person) {
+        Data data = new Data();
+        List<String[]> stringArrayList = new ArrayList<>();
+        String string = getDataString(person);
+        String[] results = string.split("\n");
+        System.out.println(Arrays.toString(results));
+        //System.out.println("results[0]: "+results[0]);
+        //System.out.println("results[8]: "+results[8]);
+        for (int i = 0; i < results.length; i++) {
+            String[] pairs = results[i].split(": ");
+            stringArrayList.add(pairs);
+        }
+
+        for (int i = 0; i < stringArrayList.size(); i++) {
+            //System.out.println("stringArrayList: "+ Arrays.toString(stringArrayList.get(i)));
+        }
+        String output = "";
+        for (int i = 0; i < stringArrayList.size(); i++) {
+            for (int j = 0; j < stringArrayList.size(); j++) {
+                if((stringArrayList.get(i)[0].equals(stringArrayList.get(j)[0]) && !stringArrayList.get(i)[0].equals("EXP")) && (!stringArrayList.get(i)[1].equals(stringArrayList.get(j)[1]))){
+                    System.out.println("document part: "+stringArrayList.get(i)[0]);
+                    System.out.println("mismatch: "+stringArrayList.get(i)[1] +" ---> "+ stringArrayList.get(j)[1]);
+                    String input = stringArrayList.get(i)[0];
+
+                    switch(input) {
+                        case "ID#":
+                            data.setString("Detainment: ID number mismatch.");
+                            data.setBol(true);
+                            break;
+                        case "NATION":
+                            data.setString("Detainment: nationality mismatch.");
+                            data.setBol(true);
+                            break;
+                        case "NAME":
+                            data.setString("Detainment: name mismatch.");
+                            data.setBol(true);
+                            break;
+                        case "SEX":
+                            data.setString("Detainment: sex mismatch.");
+                            data.setBol(true);
+                            break;
+                        case "DOB":
+                            data.setString("Detainment: date of birthday mismatch.");
+                            data.setBol(true);
+                            break;
+                        default:
+                            // code block
+                    }
+
+
+                }
+            }
+
+        }
+
+        return data;
+
+    }
+
+    public static class Data{
+        private boolean bol = false;
+        private String string;
+        public Data() {
+        }
+
+        public boolean isBol() {
+            return bol;
+        }
+
+        public void setBol(boolean bol) {
+            this.bol = bol;
+        }
+
+        public String getString() {
+            return string;
+        }
+
+        public void setString(String string) {
+            this.string = string;
+        }
+    }
+
     //public String getBannedNation(Map<String, String> person){
     public boolean getBannedNation(Map<String, String> person){//itt az osszes letezo esetet le kell fedni, lást teszt
         System.out.println("BULLETIN:" + getBulletin());
-        System.out.println("GETKEY: "+getkey(person));
+        System.out.println("GETKEY: "+ getKey(person));
         //String getKey = getkey(person);
 
         //getKey = getKey.replace("_", " ");
@@ -194,7 +286,7 @@ public class Inspector {
         List<List<String>> nations = nations(getBulletin());
         //System.out.println("nations.get(0): " + nations.get(0));
         //System.out.println("nations.get(1): "+nations.get(1));
-        System.out.println("----");
+
 
         if (getBulletin().contains("Deny")) {
             System.out.println("DENY");
@@ -206,13 +298,26 @@ public class Inspector {
 
         } else if (getBulletin().contains("Allow")) {
             System.out.println("ALLOW");
-            nations.get(0).add("Arstotzka");
+            System.out.println("NATIONS: "+nations);
+            System.out.println("NATIONS_get0_get0: "+nations.get(0).get(0));
+            //System.out.println("NATIONS_get0_get4: "+nations.get(0).get(4));
+            System.out.println("NATIONS_get0_SIZE: "+nations.get(0).size());
+
+            List<String> newNations = nations.get(0);
+
+            //nations.get(0).add("Arstotzka");
             //System.out.println("nations.get(0)_1: " + nations.get(0));
-            for (int i = 0; i < nations.get(0).size(); i++) {
-                if (nations.get(0).get(i).equals(data)) {
+            for (int j = 0; j < newNations.size(); j++) {
+                System.out.println("j: " + j);
+                if (nations.get(0).get(j).trim().equals(data.trim())) {
+                    System.out.println("ALLOW_2");
+                    System.out.println("DATA: "+data);
                     return false;
                 }
+
+                //return true;
             }
+            return true;
 
         }/*else if(getBulletin().contains(getKey)){
             System.out.println("else_if_3");
@@ -304,14 +409,14 @@ public class Inspector {
     public static String extractDataFromPerson(Map<String, String> person, String input){
         List<String[]> stringArrayList = new ArrayList<>();
         String string = getDataString(person);
-        //System.out.println("String {: "+string + "}");
+        System.out.println("String {: "+string + "}");
         String[] results = string.split("\n");
         //System.out.println("results: "+Arrays.toString(results));
 
         String extractedData = "";
 
         for (int i = 0; i < results.length; i++) {
-            if(results[i].contains("NAME")){
+            if(results[i].contains("NAME")&& input.equals("NAME")){
                 String[] pairs = results[i].split(": ");
                 extractedData = pairs[1];
             } else {
@@ -343,6 +448,39 @@ public class Inspector {
         return extractedData;
     }
 
+    public static List<String> extractDataFromPerson2(Map<String, String> person, String input){
+        List<String[]> stringArrayList = new ArrayList<>();
+        String string = getDataString(person);
+        System.out.println("String {: "+string + "}");
+        String[] results = string.split("\n");
+
+        List<String> extractedData = new ArrayList<>();
+
+        for (int i = 0; i < results.length; i++) {
+            if(results[i].contains("NAME") && input.equals("NAME")){
+                String[] pairs = results[i].split(": ");
+                extractedData.add(pairs[1]);
+            } else {
+                String[] pairs = results[i].split(", "); // ation, DO
+                stringArrayList.add(pairs[0].split(":"));
+            }
+
+        }
+        // check:
+        System.out.println("list: ");
+        for (int i = 0; i < stringArrayList.size(); i++) {
+            System.out.println(Arrays.toString(stringArrayList.get(i)));
+        }
+
+        for (int i = 0; i < stringArrayList.size(); i++) {
+            if(stringArrayList.get(i)[0].contains(input)){
+                extractedData.add(stringArrayList.get(i)[1].trim());
+            }
+        }
+
+        return extractedData;
+    }
+
     public static String createPersonName(String input){ //Costanza, Josef --> Josef Costanza
         String[] array = input.split(", ");
         StringBuilder stringBuilder = new StringBuilder();
@@ -358,7 +496,7 @@ public class Inspector {
     }
 
 
-    public String getkey(Map<String, String> person){
+    public String getKey(Map<String, String> person){
         StringBuilder stringBuilder = new StringBuilder();
         Set<Map.Entry<String, String>> entrySet = person.entrySet();
         for (Map.Entry<String, String> entry : entrySet) {

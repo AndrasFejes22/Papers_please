@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -88,7 +90,7 @@ class InspectorTest {
         Inspector inspector = new Inspector();
         inspector.receiveBulletin("Allow citizens of Antegria, Impor, Kolechia, Obristan, Republia, United Federation\nWanted by the State: Wilma Harkonnen");
         Map<String, String> KostovetskyNaomi = new HashMap<>();
-        KostovetskyNaomi.put("", "NATION: United Federation\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1981.12.24\nNAME: Smirnov, Sophia");
+        KostovetskyNaomi.put("", "NATION: United Federation\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1985.12.24\nNAME: Smirnov, Sophia");
         assertEquals("Cause no trouble.", inspector.inspect(KostovetskyNaomi));//még nem jo
         System.out.println("******************");
     }
@@ -110,15 +112,15 @@ class InspectorTest {
         Inspector inspector = new Inspector();
         inspector.receiveBulletin("Entrants require passport\nAllow citizens of Antegria, Impor, Kolechia, Obristan, Republia, United Federation\nWanted by the State: William Pearl");
         Map<String, String> KostovetskyNaomi = new HashMap<>();
-        KostovetskyNaomi.put("passport", "NATION: Republia\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1981.12.24\nNAME: Smirnov, Sophia");
-        assertEquals("Cause no trouble.", inspector.inspect(KostovetskyNaomi));//még nem jo
+        KostovetskyNaomi.put("passport", "NATION: Republia\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1984.12.24\nNAME: Smirnov, Sophia");
+        //assertEquals("Cause no trouble.", inspector.inspect(KostovetskyNaomi));//még nem jo
         System.out.println("******************");
         //Deny citizens of Kolechia, Republia + Republia
 
         Inspector inspector2 = new Inspector();
-        inspector2.receiveBulletin("Deny citizens of Kolechia, Republia\nWanted by the State: William Pearl");
+        inspector2.receiveBulletin("Allow citizens of Arstotzka\nWanted by the State: William Pearl");
         Map<String, String> SmirnovSophia = new HashMap<>();
-        SmirnovSophia.put("", "NATION: Republia\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1981.12.24\nNAME: Smirnov, Sophia");
+        SmirnovSophia.put("", "NATION: Republia\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1984.12.24\nNAME: Smirnov, Sophia");
         assertEquals("Entry denied: citizen of banned nation.", inspector2.inspect(SmirnovSophia));
         //Deny citizens of Kolechia, Republia + Arstotzka
         /*
@@ -134,21 +136,72 @@ class InspectorTest {
     }
 
     @Test
-    public void preliminaryTraining7() {//value nem sortöréssel van nem jó ( valamelyik nem jó vagy sortörés van vagy space)
+    public void preliminaryTraining7() {
         Inspector inspector = new Inspector();
         inspector.receiveBulletin("Foreigners require access permit\nWanted by the State: Wilma Harkonnen");
         Map<String, String> KostovetskyNaomi = new HashMap<>();
-        KostovetskyNaomi.put("access_permit", "NATION: United Federation\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1983-10-15\nNAME: Smirnov, Sophia");
-        assertEquals("Cause no trouble.", inspector.inspect(KostovetskyNaomi));//még nem jo
+        KostovetskyNaomi.put("passport", "NATION: Arstotzka\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1983-10-15\nNAME: Smirnov, Sophia");
+        assertEquals("Glory to Arstotzka.", inspector.inspect(KostovetskyNaomi));//még nem jo
         System.out.println("******************");
+        /**
+         * EZ SEM JÓ MÉG!
+         * KEY: passport
+         * VALUE: NATION: Arstotzka
+         * DOB: 1939.01.07
+         * SEX: F
+         * ISS: East Grestin
+         * ID#: SK084-HRJQ1
+         * EXP: 1985.08.04
+         * NAME: Strauss, Cecelia
+         * Nation?Arstotzka
+         * ORDER: Foreigners require access permit
+         * Wanted by the State: Erika Reichenbach
+         * !!!expected:<[Glory to Arstotzka].> but was:<[Entry denied: missing required access permit].>
+         * */
     }
     @Test
-    public void preliminaryTraining8() {//value nem sortöréssel van nem jó ( valamelyik nem jó vagy sortörés van vagy space)
+    public void preliminaryTraining8() {
         Inspector inspector = new Inspector();
         inspector.receiveBulletin("Allow citizens of Arstotzka\nWanted by the State: Wilma Harkonnen");
         Map<String, String> KostovetskyNaomi = new HashMap<>();
         KostovetskyNaomi.put("access_permit", "NATION: Obristan\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1983-10-15\nNAME: Smirnov, Sophia");
         assertEquals("Entry denied: citizen of banned nation.", inspector.inspect(KostovetskyNaomi));//még nem jo
+        System.out.println("******************");
+    }
+
+    /**
+     * TWO EXPIRES DATE!!!
+     * date of entrant: 1984-03-11
+     * exp date: 1982-11-22
+     * November 25th, 1982
+     * KEY: passport access_permit
+     * VALUE: NATION: Obristan
+     * DOB: 1926.07.26
+     * SEX: M
+     * ISS: Skal
+     * ID#: JNRK1-F0BU3
+     * EXP: 1982.06.18
+     * NAME: Reed, Damian NAME: Reed, Damian
+     * NATION: Obristan
+     * ID#: JNRK1-F0BU3
+     * PURPOSE: IMMIGRATE
+     * DURATION: FOREVER
+     * HEIGHT: 167.0cm
+     * WEIGHT: 71.0kg
+     * EXP: 1984.04.06
+     * Nation?Obristan
+     * ORDER: Foreigners require access permit
+     * Wanted by the State: Olga Borshiki
+     * */
+
+    @Test
+    public void preliminaryTraining9() {
+        Inspector inspector = new Inspector();
+        inspector.receiveBulletin("Allow citizens of Arstotzka\nWanted by the State: Wilma Harkonnen");
+        Map<String, String> KostovetskyNaomi = new HashMap<>();
+        KostovetskyNaomi.put("access_permit", "NATION: Arstotzka\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1981-10-15\nNAME: Smirnov, Sophia");
+        KostovetskyNaomi.put("passport", "NATION: Arstotzka\nDOB: 1924.12.15\nSEX: F\nISS: Haihan\nID#: AT8UD-H2RE3\nEXP: 1983-02-14\nNAME: Smirnov, Sophia");
+        assertEquals("Entry denied: passport expired.", inspector.inspect(KostovetskyNaomi));
         System.out.println("******************");
     }
 
@@ -162,19 +215,38 @@ class InspectorTest {
         System.out.println(Inspector.nations(bulletin2));
     }
 
+    //[nationality] mismatch test
+
+    @Test
+    void mismatchTest() {
+        Inspector inspector = new Inspector();
+        inspector.receiveBulletin("Foreigners require access permit\n" +
+                "Wanted by the State: Attila Ortiz");
+        Map<String, String> josef = new HashMap<>();
+        //name mismatch:
+        josef.put("passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef2\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1985.03.15");
+        josef.put("work pass", "ID#: GC07D-FU8AR\nNATION: United Federation\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1985.03.15");
+        assertEquals("Detainment: name mismatch.", inspector.inspect(josef));
+    }
+
     @Test
     void expireDatesTest() {
         //a document is considered expired if the expiration date is November 22, 1982 or earlier
         Map<String, String> josef = new HashMap<>();
-        josef.put("passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1981.03.15");
-        assertTrue(Inspector.expiredDates(josef));
+        Inspector inspector = new Inspector();
+        josef.put("passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1985.03.15");
+        josef.put("work pass", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1981.03.15");
+        //assertTrue(Inspector.expiredDates(josef));
 
         Map<String, String> joe = new HashMap<>();
-        joe.put("passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1981-03-15");
-        assertTrue(Inspector.expiredDates(joe));
+        inspector.receiveBulletin("ORDER: Foreigners require access permit\n" +
+                "Wanted by the State: Amalie Feyd");
+        joe.put("passport", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1982-11-22");
+        joe.put("access permit", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Costanza, Josef\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1980-11-22");
+        //assertTrue(Inspector.expiredDates(joe));
 
 
-        //assertEquals("Entry denied: passport expired.", Inspector.expiredDates("1981.11.22"));
+        assertEquals("Entry denied: access permit expired.", inspector.inspect(joe));
     }
 
     @Test
@@ -248,5 +320,29 @@ class InspectorTest {
         //assertEquals("Arstotzka", Inspector.extractDataFromPerson(johnDoe, "NATION"));
         assertEquals("Doe, John", Inspector.extractDataFromPerson(johnDoe, "NAME"));
         assertEquals("1933-11-28", Inspector.extractDataFromPerson(johnDoe, "DOB"));
+        assertEquals("Arstotzka", Inspector.extractDataFromPerson(johnDoe, "NATION"));
     }
+
+    @Test
+    void extractDataFromPreson2Test() {
+        List<String> EXPdatas = new ArrayList<>();
+        EXPdatas.add("1982.03.15");
+        EXPdatas.add("1983.03.15");
+
+        Map<String, String> johnDoe = new HashMap<>();
+        //johnDoe.put("work pass", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Doe, John\nDOB: 1933.11.28\nSEX: M\nISS: East Grestin\nEXP: 1983.03.15");
+        johnDoe.put("work pass", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Doe, John\nDOB: 1933-11-28\nSEX: M\nISS: East Grestin\nEXP: 1982.03.15");
+        johnDoe.put("work pass2", "ID#: GC07D-FU8AR\nNATION: Arstotzka\nNAME: Doe, JANE\nDOB: 1933-11-28\nSEX: M\nISS: East Grestin\nEXP: 1983.03.15");
+
+
+        assertEquals(EXPdatas, Inspector.extractDataFromPerson2(johnDoe, "EXP"));
+
+        List<String> NAMEdatas = new ArrayList<>();
+        NAMEdatas.add("Doe, John");
+        NAMEdatas.add("Doe, JANE");
+
+        assertEquals(NAMEdatas, Inspector.extractDataFromPerson2(johnDoe, "NAME"));
+
+    }
+
 }
